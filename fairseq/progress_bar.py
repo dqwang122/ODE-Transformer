@@ -15,6 +15,7 @@ from numbers import Number
 import os
 import re
 import sys
+import datetime
 
 from tqdm import tqdm
 
@@ -63,11 +64,12 @@ class progress_bar(object):
     def __init__(self, iterable, epoch=None, prefix=None):
         self.iterable = iterable
         self.epoch = epoch
-        self.prefix = ''
+        self.prefix = "{} ".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         if epoch is not None:
             self.prefix += '| epoch {:03d}'.format(epoch)
         if prefix is not None:
             self.prefix += ' | {}'.format(prefix)
+        print(self.prefix)
 
     def __enter__(self):
         return self

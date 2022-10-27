@@ -327,7 +327,7 @@ class ODETransformerEncoder(FairseqEncoder):
         if self.calculate_num == 2 and self.rk_type == "learnable":
             # RK2-learnable
             self.gate_linear = Linear(2 * embed_dim, 1)
-        elif self.calculate_num == 2 and self.rk_type == "initialization"
+        elif self.calculate_num == 2 and self.rk_type == "initialization":
             self.alpha = torch.nn.Parameter(torch.Tensor(self.calculate_num))
             self.alpha.data.fill_(1)
         else:
@@ -650,7 +650,7 @@ class ODETransformerDecoder(FairseqIncrementalDecoder):
 
     def buffered_future_mask(self, tensor):
         dim = tensor.size(0)
-        if not hasattr(self, '_future_mask') or self._future_mask is None or self._future_mask.device != tensor.device:
+        if not hasattr(self, '_future_mask') or getattr(self, '_future_mask') is None or getattr(self, '_future_mask').device != tensor.device:
             self._future_mask = torch.triu(utils.fill_with_neg_inf(tensor.new(dim, dim)), 1)
         if self._future_mask.size(0) < dim:
             self._future_mask = torch.triu(utils.fill_with_neg_inf(self._future_mask.resize_(dim, dim)), 1)
@@ -1044,6 +1044,7 @@ def base_architecture(args):
     args.decoder_integration_type = getattr(args, 'decoder_integration_type', 'avg')
     args.max_relative_length = getattr(args, 'max_relative_length', args.max_relative_length)
     args.enc_calculate_num = getattr(args, 'enc_calculate_num', 1)
+    args.dec_calculate_num = getattr(args, 'dec_calculate_num', 1)
     # choices of standard, learnable, gated
     args.rk_type = getattr(args, 'rk_type', 'standard')
 
@@ -1069,6 +1070,24 @@ def ode_transformer_t2t_wmt_en_de(args):
     args.rk_type = getattr(args, 'rk_type', 'learnbale')
     args.encoder_layers = getattr(args, 'encoder_layers', 6)
     args.enc_calculate_num = getattr(args, 'enc_calculate_num', 2)
+    base_architecture(args)
+
+@register_model_architecture('ode_transformer', 'ode_transformer_t2t_wmt_en_de_big')
+def ode_transformer_t2t_wmt_en_de_big(args):
+    args.encoder_normalize_before = True
+    args.decoder_normalize_before = True
+    args.attention_dropout = getattr(args, 'attention_dropout', 0.1)
+    args.relu_dropout = getattr(args, 'relu_dropout', 0.1)
+    args.encoder_history_type = getattr(args, 'encoder_history_type', 'learnable_dense')
+    args.decoder_history_type = getattr(args, 'decoder_history_type', 'learnable_dense')
+    args.rk_type = getattr(args, 'rk_type', 'learnbale')
+    args.encoder_layers = getattr(args, 'encoder_layers', 6)
+    args.encoder_embed_dim = getattr(args, 'encoder_embed_dim', 1024)
+    args.encoder_ffn_embed_dim = getattr(args, 'encoder_ffn_embed_dim', 4096)
+    args.encoder_attention_heads = getattr(args, 'encoder_attention_heads', 16)
+    args.decoder_embed_dim = getattr(args, 'decoder_embed_dim', 1024)
+    args.decoder_ffn_embed_dim = getattr(args, 'decoder_ffn_embed_dim', 4096)
+    args.decoder_attention_heads = getattr(args, 'decoder_attention_heads', 16)
     base_architecture(args)
 
 @register_model_architecture('ode_transformer', 'ode_relative_transformer_t2t_wmt_en_de')

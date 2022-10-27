@@ -1,12 +1,18 @@
 #! /usr/bin/bash
 set -e
 
-#device=0
-device=0,1,2,3,4,5,6,7
-
-task=wmt-en2de
+# task=wmt-en2de
+task=wmt-en2fr
 # must set this tag
-tag=RK2-learnbale-layer12-Big-RPR
+# tag=RK2-learnbale-layer12-Big-RPR
+tag=$1
+
+# device=0,1,2,3,4,5,6,7
+# device=0
+device=$2
+
+dataroot=/mnt/data2/danqingwang/Dataset/MT/data-bin
+workroot=/mnt/data2/danqingwang/Workspace/ODETransformer
 
 if [ $task == "wmt-en2de" ]; then
         arch=ode_relative_transformer_t2t_wmt_en_de_big
@@ -45,7 +51,7 @@ elif [ $task == "wmt-en2ro" ]; then
         src_lang=en
         tgt_lang=ro
 elif [ $task == "wmt-en2fr" ]; then
-        arch=ode_relative_transformer_t2t_wmt_en_de_big
+        arch=ode_transformer_t2t_wmt_en_de_big
         share_embedding=1
         share_decoder_input_output_embed=0
         criterion=label_smoothed_cross_entropy
@@ -56,10 +62,10 @@ elif [ $task == "wmt-en2fr" ]; then
         max_tokens=4096
         update_freq=8
         weight_decay=0.0
-        keep_last_epochs=20
+        keep_last_epochs=10
         max_epoch=20
         max_update=
-        data_dir=wmt_en_fr_joint_bpe
+        data_dir=wmt14_en_fr_joint_bpe
         src_lang=en
         tgt_lang=fr
 else
@@ -67,7 +73,7 @@ else
         exit
 fi
 
-save_dir=checkpoints/$task/$tag
+save_dir=$workroot/checkpoints/$task/$tag
 
 if [ ! -d $save_dir ]; then
         mkdir -p $save_dir
@@ -76,7 +82,7 @@ cp ${BASH_SOURCE[0]} $save_dir/train.sh
 
 gpu_num=`echo "$device" | awk '{split($0,arr,",");print length(arr)}'`
 
-cmd="python3 -u train.py data-bin/$data_dir
+cmd="python3 -u train.py $dataroot/$data_dir
   --distributed-world-size $gpu_num -s $src_lang -t $tgt_lang
   --arch $arch
   --optimizer adam --clip-norm 0.0
@@ -88,9 +94,10 @@ cmd="python3 -u train.py data-bin/$data_dir
   --update-freq $update_freq
   --rk-type learnable
   --enc-calculate-num 2
-  --encoder-layers 12
+  --encoder-layers 6
   --dropout 0.1
   --no-progress-bar
+  --log-format simple
   --log-interval 100
   --ddp-backend no_c10d 
   --seed 1
@@ -123,7 +130,7 @@ cmd=${cmd}" --reset-optimizer "
 fi
 
 
-export CUDA_VISIBLE_DEVICES=$device
-cmd="nohup "${cmd}" > $save_dir/train.log 2>&1 &"
+# export CUDA_VISIBLE_DEVICES=$device
+cmd=" "${cmd}" > $save_dir/train.log 2>&1 &"
 eval $cmd
 tail -f $save_dir/train.log

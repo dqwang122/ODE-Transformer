@@ -1,0 +1,8 @@
+# py
+__pycache__/
+*.py[cod]
+
+
+# output
+stdout.txt
+stderr.txt
