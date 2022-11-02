@@ -1,16 +1,16 @@
 #! /usr/bin/bash
 set -e
 
-# device=0,1,2,3,4,5,6,7
-device=0
-
 # must set this tag
 # tag=RK2-learnbale-layer12-Big-RPR
 tag=$1
 
-extraargs=$2
+# task=wmt-en2de
+task=wmt-en2fr-baseline
 
-task=wmt-en2fr
+# device=0,1,2,3,4,5,6,7
+device=0
+# device=$2
 
 dataroot=/mnt/data2/danqingwang/Dataset/MT/data-bin
 workroot=/mnt/data2/danqingwang/Workspace/ODETransformer
@@ -69,6 +69,24 @@ elif [ $task == "wmt-en2fr" ]; then
         data_dir=wmt14_en_fr_joint_bpe
         src_lang=en
         tgt_lang=fr
+elif [ $task == "wmt-en2fr-baseline" ]; then
+        arch=transformer_vaswani_wmt_en_de_big
+        share_embedding=1
+        share_decoder_input_output_embed=0
+        criterion=label_smoothed_cross_entropy
+        reset_optimizer=0
+        fp16=1
+        lr=0.002
+        warmup=16000
+        max_tokens=16384 
+        update_freq=8
+        weight_decay=0.0
+        keep_last_epochs=10
+        max_epoch=20
+        max_update=
+        data_dir=wmt14_en_fr_joint_bpe
+        src_lang=en
+        tgt_lang=fr
 else
         echo "unknown task=$task"
         exit
@@ -93,8 +111,8 @@ cmd="python3 -u train.py $dataroot/$data_dir
   --criterion $criterion --label-smoothing 0.1
   --max-tokens $max_tokens
   --update-freq $update_freq
-  --rk-type learnable
-  --enc-calculate-num 2
+  --encoder-normalize-before 
+  --decoder-normalize-before
   --encoder-layers 6
   --dropout 0.1
   --no-progress-bar
@@ -104,9 +122,7 @@ cmd="python3 -u train.py $dataroot/$data_dir
   --seed 1
   --save-dir $save_dir
   --keep-last-epochs $keep_last_epochs
-  --tensorboard-logdir $save_dir"
-
-cmd=${cmd}" "$extraargs 
+  --tensorboard-logdir $save_dir" 
 
 adam_betas="'(0.9, 0.997)'"
 cmd=${cmd}" --adam-betas "${adam_betas}

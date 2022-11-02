@@ -986,7 +986,7 @@ def transformer_t2t_wmt_en_de(args):
     base_architecture(args)
 
 @register_model_architecture('transformer', 'transformer_t2t_wmt_en_de_24l')
-def transformer_t2t_wmt_en_de(args):
+def transformer_t2t_wmt_en_de_24l(args):
     args.encoder_normalize_before = True
     args.decoder_normalize_before = True
     args.attention_dropout = getattr(args, 'attention_dropout', 0.1)

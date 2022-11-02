@@ -330,6 +330,8 @@ class ODETransformerEncoder(FairseqEncoder):
         elif self.calculate_num == 2 and self.rk_type == "initialization":
             self.alpha = torch.nn.Parameter(torch.Tensor(self.calculate_num))
             self.alpha.data.fill_(1)
+        elif self.calculate_num == 1:
+            pass
         else:
             raise ValueError("invalid rk_type！")
 
@@ -417,6 +419,8 @@ class ODETransformerEncoder(FairseqEncoder):
                 elif self.rk_type == "initialization":
                 #learnable coefficients with initialized 1
                     x = residual + self.alpha[0] * runge_kutta_list[0] + self.alpha[1] * runge_kutta_list[1]
+            elif self.calculate_num == 1:
+                x = runge_kutta_list[0]
             else:
                 raise ValueError("invalid caculate num！")
 
@@ -547,7 +551,7 @@ class ODETransformerDecoder(FairseqIncrementalDecoder):
         if self.normalize:
             self.layer_norm = LayerNorm(embed_dim)
         self.calculate_num = args.dec_calculate_num
-        assert self.calculate_num == 1
+        assert self.calculate_num == 1                  # make sure the dec_calculate_num == 1
         self.use_word_dropout = args.use_word_dropout
         self.word_dropout = args.word_dropout
 
@@ -731,6 +735,8 @@ class TransformerEncoderLayer(nn.Module):
         Returns:
             encoded output of shape `(batch, src_len, embed_dim)`
         """
+
+        # MHA block
         residual = x
         x = self.maybe_layer_norm(0, x, before=True)
         x, _ = self.self_attn(query=x, key=x, value=x, key_padding_mask=encoder_padding_mask)
@@ -738,6 +744,7 @@ class TransformerEncoderLayer(nn.Module):
         x = residual + x
         x = self.maybe_layer_norm(0, x, after=True)
 
+        # FFN block
         residual = x
         x = self.maybe_layer_norm(1, x, before=True)
         x = F.relu(self.fc1(x))

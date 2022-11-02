@@ -64,7 +64,7 @@ class progress_bar(object):
     def __init__(self, iterable, epoch=None, prefix=None):
         self.iterable = iterable
         self.epoch = epoch
-        self.prefix = "{} ".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        self.prefix = ""
         if epoch is not None:
             self.prefix += '| epoch {:03d}'.format(epoch)
         if prefix is not None:
@@ -189,8 +189,9 @@ class simple_progress_bar(progress_bar):
 
     def print(self, stats, tag='', step=None):
         """Print end-of-epoch stats."""
+        timestep = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         postfix = self._str_pipes(self._format_stats(stats))
-        print('{} | {}'.format(self.prefix, postfix), flush=True)
+        print('{} | {} | {}'.format(timestep, self.prefix, postfix), flush=True)
 
 
 class tqdm_progress_bar(progress_bar):
